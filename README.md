@@ -39,6 +39,7 @@
 ```bash
 git clone https://github.com/lkofe1/foodgramm
 cd foodgram
+```
 
 2. Настройте переменные окружения:
     В корневой директории проекта создайте файл .env (шаблон см. ниже).
@@ -47,17 +48,20 @@ cd foodgram
 
 ```bash
 sudo docker compose up -d --build
+```
 
 4. Выполните миграции бэкенда и загрузите базу ингредиентов:
 
 ```bash
 sudo docker compose exec backend python manage.py migrate
 sudo docker compose exec backend python manage.py load_ingredients
+```
 
 5. Соберите статичные файлы приложения:
 
 ```bash
 sudo docker compose exec backend python manage.py collectstatic --no-input
+```
 
 # Теперь проект будет доступен локально по адресу: http://localhost
 
