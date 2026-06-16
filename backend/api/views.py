@@ -9,10 +9,10 @@ from rest_framework.response import Response
 
 from recipes.models import (
     Tag, Ingredient, Recipe, Favorite, ShoppingCart, RecipeIngredient)
-from users.models import Follow
+from .permissions import IsAuthorOrReadOnly
 from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
-                           ShortRecipeSerializer, FollowSerializer)
+                          ShortRecipeSerializer, FollowSerializer)
 from .filters import RecipeFilter, IngredientFilter
 from .pagination import CustomPagination
 
@@ -37,7 +37,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthorOrReadOnly,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
