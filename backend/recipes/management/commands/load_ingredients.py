@@ -10,8 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        path = os.path.join(settings.BASE_DIR, '..', 'data',
-                            'ingredients.json')
+        path = os.path.join(settings.BASE_DIR, 'data', 'ingredients.json')
 
         if not os.path.exists(path):
             self.stdout.write(self.style.ERROR(
