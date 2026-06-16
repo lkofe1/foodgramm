@@ -96,7 +96,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             shopping_list.append(f'- {name} ({unit}) — {amount}')
 
         response = HttpResponse(
-            '\n'.join(shopping_list), 
+            '\n'.join(shopping_list),
             content_type='text/plain; charset=utf-8'
         )
         response['Content-Disposition'] = (
