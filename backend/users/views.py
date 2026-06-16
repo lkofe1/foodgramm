@@ -11,6 +11,7 @@ from api.pagination import CustomPagination
 
 User = get_user_model()
 
+
 class CustomUserViewSet(UserViewSet):
     pagination_class = CustomPagination
 
@@ -31,7 +32,8 @@ class CustomUserViewSet(UserViewSet):
             if request.user == author:
                 return Response({'errors': 'Нельзя подписаться на себя'},
                                 status=status.HTTP_400_BAD_REQUEST)
-            if Follow.objects.filter(user=request.user, author=author).exists():
+            if Follow.objects.filter(user=request.user,
+                                     author=author).exists():
                 return Response({'errors': 'Вы уже подписаны'},
                                 status=status.HTTP_400_BAD_REQUEST)
 

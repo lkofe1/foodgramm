@@ -174,7 +174,7 @@ class FollowSerializer(CustomUserSerializer):
     class Meta:
         model = User
         fields = (
-            'email', 'id', 'username', 'first_name', 'last_name', 
+            'email', 'id', 'username', 'first_name', 'last_name',
             'is_subscribed', 'avatar', 'recipes', 'recipes_count'
         )
 
