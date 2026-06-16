@@ -1,6 +1,6 @@
 # Проект Foodgram
 
-![Foodgram Workflow](https://github.com/lkofe1/foodgramm) 
+![Foodgram Workflow](https://github.com/lkofe1/foodgramm/actions/workflows/main.yml/badge.svg) 
 
 ## Описание
 **Foodgram** — это онлайн-сервис, через которое пользователи могут публиковать свои рецепты, подписываться на публикации других пользователей, добавлять понравившиеся рецепты в список «Избранное», а также скачивать список продуктов для приготовления выбранных блюд.
