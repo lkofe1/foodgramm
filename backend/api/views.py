@@ -12,7 +12,7 @@ from recipes.models import (
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (TagSerializer, IngredientSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
-                          ShortRecipeSerializer, FollowSerializer)
+                          ShortRecipeSerializer)
 from .filters import RecipeFilter, IngredientFilter
 from .pagination import CustomPagination
 

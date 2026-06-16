@@ -7,7 +7,6 @@ from users.models import User, Follow
 
 
 class Base64ImageField(serializers.ImageField):
-    """Кастомное поле для декодирования base64 изображений от фронтенда."""
     def to_internal_value(self, data):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')

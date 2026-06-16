@@ -8,7 +8,7 @@ User = get_user_model()
 
 class Tag(models.Model):
     name = models.CharField('Название', max_length=200, unique=True)
-    slug = models.SlugField('Слаг', max_length=200, unique=True)
+    slug = models.SlugField('Тег', max_length=200, unique=True)
 
     class Meta:
         verbose_name = 'Тег'
