@@ -55,6 +55,7 @@ sudo docker compose up -d --build
 ```bash
 sudo docker compose exec backend python manage.py migrate
 sudo docker compose exec backend python manage.py load_ingredients
+sudo docker compose exec backend python manage.py load_tags
 ```
 
 5. Соберите статичные файлы приложения:
@@ -63,7 +64,7 @@ sudo docker compose exec backend python manage.py load_ingredients
 sudo docker compose exec backend python manage.py collectstatic --no-input
 ```
 
-# Теперь проект будет доступен локально по адресу: http://localhost
+* [Теперь проект будет доступен локально по адресу:](http://localhost)
 
 # Настройка окружения (Шаблон файла .env)
      Для успешного запуска проекта как локально, так и на сервере, создайте файл .env в корневой директории со следующими переменными:
@@ -88,6 +89,33 @@ DB_PORT=5432
 
 3. Деплой: Автоматическое подключение к удаленному серверу по SSH, загрузка обновленных образов, применение миграций, сбор статики и перезапуск контейнеров.
 
+# Локальный запуск без Docker (для разработки)
 
-Автор
-lkofe1 — Разработка бэкенд-логики, проектирование API, контейнеризация приложения, настройка веб-сервера Nginx и конфигурация CI/CD пайплайна.
+1. Установите виртуальное окружение и активируйте его:
+   ```bash
+   python -m venv venv
+   source venv/Scripts/activate
+   ```
+
+2. Установите зависимости:
+    ```bash 
+    pip install -r backend/requirements.txt
+    ```
+
+3. В файле .env укажите переменную USE_SQLITE=True для использования локальной базы данных.
+
+4. Выполните миграции и запустите сервер:
+    ```bash
+    python backend/manage.py migrate
+    python backend/manage.py runserver
+    ```
+
+# Ссылки проекта
+* [Сайт Foodgram](https://edagramm.ydns.eu/)
+* [Панель администратора](https://edagramm.ydns.eu/admin/)
+* [Документация API (Swagger/Redoc)](https://edagramm.ydns.eu/api/docs/)
+
+
+# Автор
+* [Бурьян Денис Алексеевич](https://github.com/lkofe1) 
+    lkofe1 — Разработка бэкенд-логики, проектирование API, контейнеризация приложения, настройка веб-сервера Nginx и конфигурация CI/CD пайплайна.
