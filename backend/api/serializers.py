@@ -1,4 +1,5 @@
 import base64
+from collections import Counter
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
@@ -6,7 +7,7 @@ from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Follow, Ingredient, Recipe, RecipeIngredient, Tag,
+    Favorite, Follow, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag,
     MIN_AMOUNT, MIN_COOKING_TIME
 )
 
@@ -91,18 +92,17 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                   'text', 'cooking_time')
         read_only_fields = fields
 
-    def _check_relation(self, recipe, relation_name):
+    def _check_relation(self, recipe, model):
         request = self.context.get('request')
         if not request or request.user.is_anonymous:
             return False
-        return getattr(request.user, relation_name).filter(
-            recipe=recipe).exists()
+        return model.objects.filter(user=request.user, recipe=recipe).exists()
 
     def get_is_favorited(self, recipe):
-        return self._check_relation(recipe, 'favorites')
+        return self._check_relation(recipe, Favorite)
 
     def get_is_in_shopping_cart(self, recipe):
-        return self._check_relation(recipe, 'shopping_cart')
+        return self._check_relation(recipe, ShoppingCart)
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
@@ -119,15 +119,12 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                   'cooking_time', 'author')
 
     def _check_duplicates(self, items, field_name):
-        seen = set()
-        duplicates = set()
-        for item in items:
-            if item in seen:
-                duplicates.add(str(item))
-            seen.add(item)
+        duplicates = [
+            item for item, count in Counter(items).items() if count > 1
+        ]
         if duplicates:
             raise serializers.ValidationError(
-                f'Дублирующиеся {field_name}: {", ".join(duplicates)}'
+                f'Дублирующиеся {field_name}: {duplicates}'
             )
 
     def validate(self, data):

@@ -97,13 +97,11 @@ class Recipe(models.Model):
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='recipe_ingredients'
+        on_delete=models.CASCADE
     )
     ingredient = models.ForeignKey(
         Ingredient,
-        on_delete=models.CASCADE,
-        related_name='recipe_ingredients'
+        on_delete=models.CASCADE
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
@@ -113,6 +111,7 @@ class RecipeIngredient(models.Model):
     )
 
     class Meta:
+        default_related_name = 'recipe_ingredients'
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецептах'
         constraints = [
@@ -124,8 +123,16 @@ class RecipeIngredient(models.Model):
 
 
 class UserRecipeRelation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        verbose_name='Рецепт'
+    )
 
     class Meta:
         abstract = True
@@ -146,7 +153,7 @@ class Favorite(UserRecipeRelation):
 
 class ShoppingCart(UserRecipeRelation):
     class Meta(UserRecipeRelation.Meta):
-        default_related_name = 'shopping_cart'
+        default_related_name = 'shopping_carts'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
 
@@ -155,13 +162,13 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='follower',
+        related_name='subscriptions',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='following',
+        related_name='subscribers',
         verbose_name='Автор'
     )
 

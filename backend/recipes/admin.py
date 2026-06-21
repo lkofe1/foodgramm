@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -9,26 +10,19 @@ from .models import (
 User = get_user_model()
 
 
-class BaseRecipeCountAdmin(admin.ModelAdmin):
+class RecipeCountMixin:
+    list_display: tuple[str, ...] = ('get_recipes_count',)
+
     @admin.display(description='Рецепты')
     def get_recipes_count(self, instance):
-        if hasattr(instance, 'recipes'):
-            return instance.recipes.count()
-        if hasattr(instance, 'recipe_ingredients'):
-            return instance.recipe_ingredients.count()
-        return 0
-
-
-class BaseRecipeRelationAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'recipe')
-    search_fields = ('user__username', 'recipe__name')
+        return instance.recipes.count()
 
 
 @admin.register(User)
-class UserAdmin(BaseRecipeCountAdmin):
+class UserAdmin(RecipeCountMixin, BaseUserAdmin):
     list_display = (
         'id', 'username', 'email', 'first_name', 'last_name',
-        'get_avatar', 'get_recipes_count', 'get_subscribers_count',
+        'get_avatar', *RecipeCountMixin.list_display, 'get_subscribers_count',
         'get_subscriptions_count'
     )
     search_fields = ('email', 'username')
@@ -77,7 +71,7 @@ class RecipeAdmin(admin.ModelAdmin):
     @admin.display(description='Ингредиенты')
     def get_ingredients(self, recipe):
         return mark_safe('<br>'.join(
-            f'{item.ingredient.name} ({item.amount}'
+            f'{item.ingredient.name} ({item.amount} '
             f'{item.ingredient.measurement_unit})'
             for item in recipe.recipe_ingredients.all()
         ))
@@ -93,22 +87,22 @@ class RecipeAdmin(admin.ModelAdmin):
 
 
 @admin.register(Ingredient)
-class IngredientAdmin(BaseRecipeCountAdmin):
-    list_display = ('id', 'name', 'measurement_unit', 'get_recipes_count')
+class IngredientAdmin(RecipeCountMixin, admin.ModelAdmin):
+    list_display = (
+        'id', 'name', 'measurement_unit', *RecipeCountMixin.list_display
+    )
     search_fields = ('name',)
+    list_filter = ('measurement_unit',)
 
 
 @admin.register(Tag)
-class TagAdmin(BaseRecipeCountAdmin):
-    list_display = ('id', 'name', 'slug', 'get_recipes_count')
+class TagAdmin(RecipeCountMixin, admin.ModelAdmin):
+    list_display = ('id', 'name', 'slug', *RecipeCountMixin.list_display)
     search_fields = ('name', 'slug')
 
 
-@admin.register(Favorite)
-class FavoriteAdmin(BaseRecipeRelationAdmin):
-    pass
 
-
-@admin.register(ShoppingCart)
-class ShoppingCartAdmin(BaseRecipeRelationAdmin):
-    pass
+@admin.register(Favorite, ShoppingCart)
+class RecipeRelationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'recipe')
+    search_fields = ('user__username', 'recipe__name')
