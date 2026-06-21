@@ -100,7 +100,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def download_shopping_cart(self, request):
-        user_recipes = Recipe.objects.filter(shopping_cart__user=request.user)
+        user_recipes = Recipe.objects.filter(shopping_carts__user=request.user)
         ingredients = RecipeIngredient.objects.filter(
             recipe__in=user_recipes
         ).values(
@@ -120,6 +120,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ])
 
         buffer = io.BytesIO(text.encode('utf-8'))
+
+        buffer.seek(0)
 
         return FileResponse(
             buffer,
