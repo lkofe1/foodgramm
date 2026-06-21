@@ -101,7 +101,6 @@ class TagAdmin(RecipeCountMixin, admin.ModelAdmin):
     search_fields = ('name', 'slug')
 
 
-
 @admin.register(Favorite, ShoppingCart)
 class RecipeRelationAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'recipe')
