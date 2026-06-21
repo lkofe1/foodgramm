@@ -142,13 +142,13 @@ class UserViewSet(DjoserUserViewSet):
         methods=['post', 'delete'],
         permission_classes=[permissions.IsAuthenticated]
     )
-    def subscribe(self, request, id):
+    def subscribe(self, request, pk):
         if request.method == 'DELETE':
             get_object_or_404(
-                Follow, user=request.user, author__id=id).delete()
+                Follow, user=request.user, author__id=pk).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
-        author = get_object_or_404(User, id=id)
+        author = get_object_or_404(User, id=pk)
         if request.user == author:
             raise serializers.ValidationError('Нельзя подписаться на себя')
 
