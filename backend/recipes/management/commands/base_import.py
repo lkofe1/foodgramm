@@ -9,7 +9,6 @@ class BaseJsonImportCommand(BaseCommand):
 
     filename = None
     model = None
-    label = "объектов"
 
     def handle(self, *args, **options):
         path = os.path.join(settings.BASE_DIR, 'data', self.filename)
@@ -25,14 +24,10 @@ class BaseJsonImportCommand(BaseCommand):
                 )
 
             self.stdout.write(self.style.SUCCESS(
-                f'Успешно загружено {self.label}: {len(created_items)} '
+                f'Успешно загружено: {len(created_items)} '
                 f'из файла {self.filename}!'
-            ))
-        except FileNotFoundError:
-            self.stdout.write(self.style.ERROR(
-                f'Файл не найден по пути: {path}'
             ))
         except Exception as error:
             self.stdout.write(self.style.ERROR(
-                f'Ошибка при загрузке данных: {error}'
+                f'Ошибка при загрузке данных из {self.filename}: {error}'
             ))

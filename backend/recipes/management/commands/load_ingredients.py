@@ -6,4 +6,3 @@ class Command(BaseJsonImportCommand):
     help = 'Загрузка ингредиентов из папки data в базу данных'
     filename = 'ingredients.json'
     model = Ingredient
-    label = 'ингредиентов'

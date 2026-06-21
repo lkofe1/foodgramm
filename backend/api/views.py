@@ -18,7 +18,7 @@ from .pagination import LimitPagination
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (
     AvatarSerializer, IngredientSerializer, RecipeReadSerializer,
-    RecipeWriteSerializer, ShortRecipeSerializer, SubscribeSerializer,
+    RecipeWriteSerializer, ShortRecipeSerializer, UserWithRecipesSerializer,
     TagSerializer
 )
 
@@ -55,10 +55,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def _add_to_relation(self, model, user, pk):
         recipe = get_object_or_404(Recipe, id=pk)
-        relation_obj, created = model.objects.get_or_create(
-            user=user, recipe=recipe)
+        _, created = model.objects.get_or_create(user=user, recipe=recipe)
         if not created:
-            raise serializers.ValidationError('Рецепт уже добавлен')
+            raise serializers.ValidationError(
+                f'Рецепт "{recipe.name}" уже добавлен в'
+                f'{model._meta.verbose_name}'
+            )
 
         serializer = ShortRecipeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -130,7 +132,7 @@ class UserViewSet(DjoserUserViewSet):
     def subscriptions(self, request):
         queryset = User.objects.filter(subscribers__user=request.user)
         page = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(
+        serializer = UserWithRecipesSerializer(
             page, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
@@ -141,25 +143,27 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def subscribe(self, request, id):
+        if request.method == 'DELETE':
+            get_object_or_404(
+                Follow, user=request.user, author__id=id).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
         author = get_object_or_404(User, id=id)
+        if request.user == author:
+            raise serializers.ValidationError('Нельзя подписаться на себя')
 
-        if request.method == 'POST':
-            if request.user == author:
-                raise serializers.ValidationError('Нельзя подписаться на себя')
-
-            follow_obj, created = Follow.objects.get_or_create(
-                user=request.user, author=author
+        _, created = Follow.objects.get_or_create(
+            user=request.user, author=author
+        )
+        if not created:
+            raise serializers.ValidationError(
+                f'Вы уже подписаны на пользователя {author.username}'
             )
-            if not created:
-                raise serializers.ValidationError('Вы уже подписаны')
 
-            serializer = SubscribeSerializer(
-                author, context={'request': request}
-            )
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        get_object_or_404(Follow, user=request.user, author=author).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = UserWithRecipesSerializer(
+            author, context={'request': request}
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,

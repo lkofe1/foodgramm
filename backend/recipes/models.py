@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-MIN_VALUE = 1
+MIN_COOKING_TIME = 1
+MIN_AMOUNT = 1
 
 
 class User(AbstractUser):
@@ -11,8 +13,7 @@ class User(AbstractUser):
         max_length=150,
         unique=True,
         validators=[RegexValidator(
-            regex=r'^[\w.@+-]+\Z',
-            message='Некорректный логин'
+            regex=settings.USERNAME_REGEX
         )]
     )
     email = models.EmailField('Email', max_length=254, unique=True)
@@ -36,7 +37,7 @@ class User(AbstractUser):
 
 class Tag(models.Model):
     name = models.CharField('Название', max_length=32, unique=True)
-    slug = models.SlugField('Тег', max_length=32, unique=True)
+    slug = models.SlugField('Слаг', max_length=32, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -76,7 +77,8 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления', validators=[
             MinValueValidator(
-                MIN_VALUE, message=f'Минимальное время {MIN_VALUE} минута'
+                MIN_COOKING_TIME,
+                message=f'Минимальное время {MIN_COOKING_TIME} минута'
             )
         ]
     )
@@ -93,7 +95,11 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients'
+    )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
@@ -102,7 +108,7 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         'Количество',
         validators=[MinValueValidator(
-            MIN_VALUE, message=f'Минимальное количество — {MIN_VALUE}'
+            MIN_AMOUNT, message=f'Минимальное количество — {MIN_AMOUNT}'
         )]
     )
 
@@ -149,13 +155,13 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscriptions',
+        related_name='follower',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribers',
+        related_name='following',
         verbose_name='Автор'
     )
 

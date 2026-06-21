@@ -64,7 +64,13 @@ sudo docker compose exec backend python manage.py load_tags
 sudo docker compose exec backend python manage.py collectstatic --no-input
 ```
 
+6. Создайте суперпользователя (администратора) для входа в админку:
+```bash
+sudo docker compose exec backend python manage.py createsuperuser
+```
+
 * [Теперь проект будет доступен локально по адресу:](http://localhost)
+* [Панель администратора. Для входа используйте данные суперпользователя, созданные на шаге №6](http://localhost/admin/)
 
 # Настройка окружения (Шаблон файла .env)
      Для успешного запуска проекта как локально, так и на сервере, создайте файл .env в корневой директории со следующими переменными:
@@ -118,4 +124,3 @@ DB_PORT=5432
 
 # Автор
 * [Бурьян Денис Алексеевич](https://github.com/lkofe1) 
-    lkofe1 — Разработка бэкенд-логики, проектирование API, контейнеризация приложения, настройка веб-сервера Nginx и конфигурация CI/CD пайплайна.
