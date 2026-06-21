@@ -3,7 +3,8 @@ from collections import Counter
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from djoser.serializers import UserSerializer as DjoserUserSerializer
+from djoser.serializers import (UserSerializer as DjoserUserSerializer,
+                                UserCreateSerializer)
 from rest_framework import serializers
 
 from recipes.models import (
@@ -38,6 +39,13 @@ class UserSerializer(DjoserUserSerializer):
             and Follow.objects.filter(
                 user=request.user, author=author).exists()
         )
+
+
+class CustomUserCreateSerializer(UserCreateSerializer):
+    class Meta(UserCreateSerializer.Meta):
+        model = User
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'password')
 
 
 class AvatarSerializer(serializers.ModelSerializer):
