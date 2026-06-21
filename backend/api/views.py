@@ -69,6 +69,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         get_object_or_404(model, user=user, recipe__id=pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
     @action(
         detail=True,
         methods=['post', 'delete'],
