@@ -1,3 +1,5 @@
+import io
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
@@ -117,8 +119,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             *shopping_list
         ])
 
+        buffer = io.BytesIO(text.encode('utf-8'))
+
         return FileResponse(
-            text,
+            buffer,
             as_attachment=True,
             filename='shopping_list.txt',
             content_type='text/plain'
