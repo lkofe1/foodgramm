@@ -124,8 +124,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             tags = ", ".join(tag.name for tag in recipe.tags.all())
             author_name = recipe.author.get_full_name(
             ) or recipe.author.username
-            recipes_text += f'- {
-                recipe.name} (Автор: {author_name}) [Теги: {tags}]\n'
+            recipes_text += (f'- {recipe.name} (Автор: {author_name}) '
+                             f'[Теги: {tags}]\n')
 
         text = f'Список покупок {formatted_date}:\n\n' + '\n'.join(
             shopping_list) + '\n' + recipes_text
