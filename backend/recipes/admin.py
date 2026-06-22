@@ -91,7 +91,7 @@ class UserAdmin(RecipeCountMixin, BaseUserAdmin):
     )
     search_fields = ('email', 'username')
     list_filter = (
-        'is_staff', 'is_active', HasRecipesFilter, 
+        'is_staff', 'is_active', HasRecipesFilter,
         HasSubscriptionsFilter, HasSubscribersFilter
     )
     empty_value_display = '-'
