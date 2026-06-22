@@ -127,7 +127,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipes_text += f'- {
                 recipe.name} (Автор: {author_name}) [Теги: {tags}]\n'
 
-        text = f'Список покупок от {formatted_date}:\n\n' + '\n'.join(
+        text = f'Список покупок {formatted_date}:\n\n' + '\n'.join(
             shopping_list) + '\n' + recipes_text
 
         response = HttpResponse(text, content_type='text/plain; charset=utf-8')
