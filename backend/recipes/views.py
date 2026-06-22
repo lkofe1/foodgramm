@@ -1,11 +1,7 @@
-from django.shortcuts import redirect
-from rest_framework.exceptions import ValidationError
-
+from django.shortcuts import redirect, get_object_or_404
 from recipes.models import Recipe
 
 
 def recipe_short_link_redirect(request, pk):
-    if not Recipe.objects.filter(pk=pk).exists():
-        raise ValidationError(f'Рецепт с id {pk} не найден')
-
+    get_object_or_404(Recipe, pk=pk)
     return redirect(f'/recipes/{pk}/')

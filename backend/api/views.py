@@ -1,8 +1,6 @@
-import io
-
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import FileResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -60,7 +58,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         _, created = model.objects.get_or_create(user=user, recipe=recipe)
         if not created:
             raise serializers.ValidationError(
-                f'Рецепт "{recipe.name}" уже добавлен в'
+                f'Рецепт "{recipe.name}" уже добавлен в '
                 f'{model._meta.verbose_name}'
             )
 
@@ -107,28 +105,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(amount=Sum('amount'))
 
-        today = timezone.now().strftime('%d.%m.%Y')
+        months = {
+            1: 'января', 2: 'февраля', 3: 'марта', 4: 'апреля', 
+            5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа', 9: 'сентября', 
+            10: 'октября', 11: 'ноября', 12: 'декабря'
+        }
+        today = timezone.now()
+        formatted_date = f"{today.day} {months[today.month]} {today.year} г."
+
         shopping_list = [
             f"{i}. {item['ingredient__name'].capitalize()} "
             f"({item['ingredient__measurement_unit']}) — {item['amount']}"
             for i, item in enumerate(ingredients, start=1)
         ]
 
-        text = '\n'.join([
-            f'Список покупок от {today}:\n',
-            *shopping_list
-        ])
+        recipes_text = "\nРецепты в списке покупок:\n"
+        for recipe in user_recipes:
+            tags = ", ".join(tag.name for tag in recipe.tags.all())
+            author_name = recipe.author.get_full_name(
+            ) or recipe.author.username
+            recipes_text += f'- {
+                recipe.name} (Автор: {author_name}) [Теги: {tags}]\n'
 
-        buffer = io.BytesIO(text.encode('utf-8'))
+        text = f'Список покупок от {formatted_date}:\n\n' + '\n'.join(
+            shopping_list) + '\n' + recipes_text
 
-        buffer.seek(0)
-
-        return FileResponse(
-            buffer,
-            as_attachment=True,
-            filename='shopping_list.txt',
-            content_type='text/plain'
-        )
+        response = HttpResponse(text, content_type='text/plain; charset=utf-8')
+        response[
+            'Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
+        return response
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -140,7 +145,7 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def subscriptions(self, request):
-        queryset = User.objects.filter(subscribers__user=request.user)
+        queryset = User.objects.filter(following__user=request.user)
         page = self.paginate_queryset(queryset)
         serializer = UserWithRecipesSerializer(
             page, many=True, context={'request': request}

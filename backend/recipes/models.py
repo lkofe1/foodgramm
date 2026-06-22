@@ -136,6 +136,7 @@ class UserRecipeRelation(models.Model):
 
     class Meta:
         abstract = True
+        default_related_name = '%(class)ss'
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],
@@ -146,14 +147,12 @@ class UserRecipeRelation(models.Model):
 
 class Favorite(UserRecipeRelation):
     class Meta(UserRecipeRelation.Meta):
-        default_related_name = 'favorites'
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
 
 
 class ShoppingCart(UserRecipeRelation):
     class Meta(UserRecipeRelation.Meta):
-        default_related_name = 'shopping_carts'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
 
@@ -162,13 +161,13 @@ class Follow(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscriptions',
+        related_name='follower',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='subscribers',
+        related_name='following',
         verbose_name='Автор'
     )
 

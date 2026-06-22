@@ -3,13 +3,12 @@ from collections import Counter
 
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
-from djoser.serializers import (UserSerializer as DjoserUserSerializer,
-                                UserCreateSerializer)
+from djoser.serializers import UserSerializer as DjoserUserSerializer
 from rest_framework import serializers
 
 from recipes.models import (
-    Favorite, Follow, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag,
-    MIN_AMOUNT, MIN_COOKING_TIME
+    Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag,
+    Follow, MIN_AMOUNT, MIN_COOKING_TIME
 )
 
 User = get_user_model()
@@ -28,7 +27,7 @@ class UserSerializer(DjoserUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = DjoserUserSerializer.Meta.fields + ('is_subscribed', 'avatar')
+        fields = (*DjoserUserSerializer.Meta.fields, 'is_subscribed', 'avatar')
         read_only_fields = fields
 
     def get_is_subscribed(self, author):
@@ -39,13 +38,6 @@ class UserSerializer(DjoserUserSerializer):
             and Follow.objects.filter(
                 user=request.user, author=author).exists()
         )
-
-
-class CustomUserCreateSerializer(UserCreateSerializer):
-    class Meta(UserCreateSerializer.Meta):
-        model = User
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'password')
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -102,9 +94,11 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def _check_relation(self, recipe, model):
         request = self.context.get('request')
-        if not request or request.user.is_anonymous:
-            return False
-        return model.objects.filter(user=request.user, recipe=recipe).exists()
+        return bool(
+            request
+            and request.user.is_authenticated
+            and model.objects.filter(user=request.user, recipe=recipe).exists()
+        )
 
     def get_is_favorited(self, recipe):
         return self._check_relation(recipe, Favorite)
@@ -169,13 +163,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
-
-        instance.tags.set(tags)
+        instance.tags.set(validated_data.pop('tags'))
         instance.recipe_ingredients.all().delete()
-        self.create_ingredients(instance, ingredients)
-
+        self.create_ingredients(instance, validated_data.pop('ingredients'))
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -196,7 +186,7 @@ class UserWithRecipesSerializer(UserSerializer):
     )
 
     class Meta(UserSerializer.Meta):
-        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
+        fields = (*UserSerializer.Meta.fields, 'recipes', 'recipes_count')
         read_only_fields = fields
 
     def get_recipes(self, author):
