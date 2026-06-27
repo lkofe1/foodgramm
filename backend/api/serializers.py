@@ -19,7 +19,9 @@ class Base64ImageField(serializers.ImageField):
         if isinstance(data, str) and data.startswith('data:image'):
             format, imgstr = data.split(';base64,')
             ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+            data = ContentFile(
+                base64.b64decode(imgstr), name='temp.' + ext
+            )
         return super().to_internal_value(data)
 
 
@@ -27,7 +29,11 @@ class UserSerializer(DjoserUserSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta(DjoserUserSerializer.Meta):
-        fields = (*DjoserUserSerializer.Meta.fields, 'is_subscribed', 'avatar')
+        fields = (
+            *DjoserUserSerializer.Meta.fields,
+            'is_subscribed',
+            'avatar'
+        )
         read_only_fields = fields
 
     def get_is_subscribed(self, author):
@@ -36,7 +42,8 @@ class UserSerializer(DjoserUserSerializer):
             request is not None
             and request.user.is_authenticated
             and Follow.objects.filter(
-                user=request.user, author=author).exists()
+                user=request.user, author=author
+            ).exists()
         )
 
 
@@ -64,7 +71,8 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
     id = serializers.ReadOnlyField(source='ingredient.id')
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
-        source='ingredient.measurement_unit')
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         model = RecipeIngredient
@@ -73,31 +81,41 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientWriteSerializer(serializers.Serializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all()
+    )
     amount = serializers.IntegerField(min_value=MIN_AMOUNT)
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
-    ingredients = RecipeIngredientReadSerializer(many=True,
-                                                 source='recipe_ingredients')
+    ingredients = RecipeIngredientReadSerializer(
+        many=True,
+        source='recipe_ingredients'
+    )
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
-        fields = ('id', 'tags', 'author', 'ingredients', 'is_favorited',
-                  'is_in_shopping_cart', 'name', 'image',
-                  'text', 'cooking_time')
+        fields = (
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image',
+            'text', 'cooking_time'
+        )
         read_only_fields = fields
 
     def _check_relation(self, recipe, model):
         request = self.context.get('request')
-        return bool(
-            request
+        # Убран вызов bool(). Логические операторы (and) и метод .exists()
+        # уже возвращают булево значение.
+        return (
+            request is not None
             and request.user.is_authenticated
-            and model.objects.filter(user=request.user, recipe=recipe).exists()
+            and model.objects.filter(
+                user=request.user, recipe=recipe
+            ).exists()
         )
 
     def get_is_favorited(self, recipe):
@@ -108,8 +126,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
-                                              many=True)
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True
+    )
     ingredients = RecipeIngredientWriteSerializer(many=True)
     image = Base64ImageField()
     author = UserSerializer(read_only=True)
@@ -117,8 +137,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('ingredients', 'tags', 'image', 'name', 'text',
-                  'cooking_time', 'author')
+        fields = (
+            'ingredients', 'tags', 'image', 'name', 'text',
+            'cooking_time', 'author'
+        )
 
     def _check_duplicates(self, items, field_name):
         duplicates = [
@@ -132,10 +154,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def validate(self, data):
         ingredients = data.get('ingredients')
         if not ingredients:
-            raise serializers.ValidationError('Нужен хотя бы один ингредиент.')
+            raise serializers.ValidationError(
+                'Нужен хотя бы один ингредиент.'
+            )
 
         self._check_duplicates(
-            [item['id'] for item in ingredients], 'ингредиенты')
+            [item['id'] for item in ingredients], 'ингредиенты'
+        )
 
         tags = data.get('tags')
         if not tags:
@@ -165,11 +190,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.tags.set(validated_data.pop('tags'))
         instance.recipe_ingredients.all().delete()
-        self.create_ingredients(instance, validated_data.pop('ingredients'))
+        self.create_ingredients(
+            instance, validated_data.pop('ingredients')
+        )
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
-        return RecipeReadSerializer(instance, context=self.context).data
+        return RecipeReadSerializer(
+            instance, context=self.context
+        ).data
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):
@@ -186,7 +215,11 @@ class UserWithRecipesSerializer(UserSerializer):
     )
 
     class Meta(UserSerializer.Meta):
-        fields = (*UserSerializer.Meta.fields, 'recipes', 'recipes_count')
+        fields = (
+            *UserSerializer.Meta.fields,
+            'recipes',
+            'recipes_count'
+        )
         read_only_fields = fields
 
     def get_recipes(self, author):
@@ -199,4 +232,5 @@ class UserWithRecipesSerializer(UserSerializer):
             except ValueError:
                 pass
         return ShortRecipeSerializer(
-            recipes, many=True, context=self.context).data
+            recipes, many=True, context=self.context
+        ).data

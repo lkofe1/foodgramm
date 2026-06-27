@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -111,29 +111,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
             10: 'октября', 11: 'ноября', 12: 'декабря'
         }
         today = timezone.now()
-        formatted_date = f"{today.day} {months[today.month]} {today.year} г."
+        formatted_date = f'{today.day} {months[today.month]} {today.year} г.'
 
         shopping_list = [
-            f"{i}. {item['ingredient__name'].capitalize()} "
-            f"({item['ingredient__measurement_unit']}) — {item['amount']}"
+            f'{i}. {item['ingredient__name'].capitalize()} '
+            f'({item['ingredient__measurement_unit']}) — {item['amount']}'
             for i, item in enumerate(ingredients, start=1)
         ]
 
-        recipes_text = "\nРецепты в списке покупок:\n"
-        for recipe in user_recipes:
-            tags = ", ".join(tag.name for tag in recipe.tags.all())
-            author_name = recipe.author.get_full_name(
-            ) or recipe.author.username
-            recipes_text += (f'- {recipe.name} (Автор: {author_name}) '
-                             f'[Теги: {tags}]\n')
+        recipes_text = '\nРецепты в списке покупок:\n' + '\n'.join(
+            f'- {recipe.name} (Автор: {recipe.author.username}) '
+            f'[Теги: {', '.join(tag.name for tag in recipe.tags.all())}]'
+            for recipe in user_recipes
+        ) + '\n'
 
         text = f'Список покупок {formatted_date}:\n\n' + '\n'.join(
             shopping_list) + '\n' + recipes_text
 
-        response = HttpResponse(text, content_type='text/plain; charset=utf-8')
-        response[
-            'Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
-        return response
+        return FileResponse(
+            text,
+            as_attachment=True,
+            filename='shopping_list.txt',
+            content_type='text/plain'
+        )
 
 
 class UserViewSet(DjoserUserViewSet):
