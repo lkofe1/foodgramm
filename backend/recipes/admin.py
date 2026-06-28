@@ -81,8 +81,11 @@ class UserAdmin(RecipeCountMixin, BaseUserAdmin):
         'is_staff', 'is_active', HasRecipesFilter,
         HasSubscriptionsFilter, HasSubscribersFilter
     )
+
+    readonly_fields = ('avatar_preview',)
+
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Дополнительно', {'fields': ('avatar',)}),
+        ('Дополнительно', {'fields': ('avatar', 'avatar_preview')}),
     )
     empty_value_display = '-'
 
@@ -98,6 +101,16 @@ class UserAdmin(RecipeCountMixin, BaseUserAdmin):
                 f'style="border-radius: 50%; object-fit: cover;"/>'
             )
         return ''
+
+    @admin.display(description='Текущий аватар')
+    def avatar_preview(self, user):
+        if user.avatar:
+            return mark_safe(
+                f'<img src="{user.avatar.url}" style="max-height: 150px; '
+                f'max-width: 150px; object-fit: cover; border-radius: 50%; '
+                f'box-shadow: 0 2px 4px rgba(0,0,0,0.15);"/>'
+            )
+        return 'Аватар не установлен'
 
     @admin.display(description='Подписчики')
     def get_subscribers_count(self, user):
@@ -133,6 +146,17 @@ class RecipeAdmin(admin.ModelAdmin):
     )
     inlines = (RecipeIngredientInline,)
     empty_value_display = '-'
+
+    readonly_fields = ('image_preview',)
+
+    @admin.display(description='Просмотр картинки')
+    def image_preview(self, recipe):
+        if recipe.image:
+            return mark_safe(
+                f'<img src="{recipe.image.url}" style="max-height: 200px; '
+                f'max-width: 300px; object-fit: contain; border-radius: 4px;">'
+            )
+        return None
 
     @admin.display(description=mark_safe('Время<br>приготовления (мин)'))
     def get_cooking_time_display(self, obj):

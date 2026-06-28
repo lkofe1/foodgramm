@@ -108,8 +108,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def _check_relation(self, recipe, model):
         request = self.context.get('request')
-        # Убран вызов bool(). Логические операторы (and) и метод .exists()
-        # уже возвращают булево значение.
         return (
             request is not None
             and request.user.is_authenticated
