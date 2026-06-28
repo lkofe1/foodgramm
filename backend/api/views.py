@@ -114,18 +114,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
         formatted_date = f'{today.day} {months[today.month]} {today.year} г.'
 
         shopping_list = [
-            f'{i}. {item['ingredient__name'].capitalize()} '
-            f'({item['ingredient__measurement_unit']}) — {item['amount']}'
+            f'{i}. {item["ingredient__name"].capitalize()} '
+            f'({item["ingredient__measurement_unit"]}) — {item["amount"]}'
             for i, item in enumerate(ingredients, start=1)
         ]
 
         recipes_text = '\nРецепты в списке покупок:\n' + '\n'.join(
             f'- {recipe.name} (Автор: {recipe.author.username}) '
-            f'[Теги: {', '.join(tag.name for tag in recipe.tags.all())}]'
+            f'[Теги: {",".join(tag.name for tag in recipe.tags.all())}]'
             for recipe in user_recipes
         ) + '\n'
 
-        text = f'Список покупок {formatted_date}:\n\n' + '\n'.join(
+        text = f'Список покупок {formatted_date}:\n\n" + "\n'.join(
             shopping_list) + '\n' + recipes_text
 
         return FileResponse(
