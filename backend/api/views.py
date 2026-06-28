@@ -135,6 +135,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             content_type='text/plain'
         )
 
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='get-link',
+        permission_classes=[permissions.AllowAny]
+    )
+    def get_link(self, request, pk):
+        recipe = get_object_or_404(Recipe, id=pk)
+        short_link = request.build_absolute_uri(f'/s/{recipe.id}/')
+        return Response({'short-link': short_link}, status=status.HTTP_200_OK)
+
 
 class UserViewSet(DjoserUserViewSet):
     pagination_class = LimitPagination
