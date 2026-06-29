@@ -127,8 +127,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ) + '\n'
 
         text = (
-            f'Список покупок {formatted_date}:\n\n' +
-            '\n'.join(shopping_list) + '\n' + recipes_text
+            f'Список покупок {formatted_date}:\n\n'
+            + '\n'.join(shopping_list) + '\n' + recipes_text
         )
 
         return FileResponse(
@@ -147,7 +147,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_link(self, request, pk):
         if not Recipe.objects.filter(id=pk).exists():
             return Response(
-                {'detail': 'Рецепт не найден.'}, 
+                {'detail': 'Рецепт не найден.'},
                 status=status.HTTP_404_NOT_FOUND
             )
 

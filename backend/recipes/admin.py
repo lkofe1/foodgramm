@@ -148,7 +148,7 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = '-'
 
     readonly_fields = ('image_preview',)
-    
+
     @admin.display(description='Ингредиенты')
     def get_ingredients(self, obj):
         return mark_safe('<br>'.join(
