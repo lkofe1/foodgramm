@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -125,8 +126,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             for recipe in user_recipes
         ) + '\n'
 
-        text = f'Список покупок {formatted_date}:\n\n" + "\n'.join(
-            shopping_list) + '\n' + recipes_text
+        text = (
+            f'Список покупок {formatted_date}:\n\n' +
+            '\n'.join(shopping_list) + '\n' + recipes_text
+        )
 
         return FileResponse(
             text,
@@ -142,9 +145,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.AllowAny]
     )
     def get_link(self, request, pk):
-        recipe = get_object_or_404(Recipe, id=pk)
-        short_link = request.build_absolute_uri(f'/s/{recipe.id}/')
-        return Response({'short-link': short_link}, status=status.HTTP_200_OK)
+        if not Recipe.objects.filter(id=pk).exists():
+            return Response(
+                {'detail': 'Рецепт не найден.'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(
+            {'short-link': request.build_absolute_uri(reverse(
+                'short_link', args=(pk,)))},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserViewSet(DjoserUserViewSet):
@@ -156,7 +167,7 @@ class UserViewSet(DjoserUserViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def subscriptions(self, request):
-        queryset = User.objects.filter(following__user=request.user)
+        queryset = User.objects.filter(subscribers__user=request.user)
         page = self.paginate_queryset(queryset)
         serializer = UserWithRecipesSerializer(
             page, many=True, context={'request': request}

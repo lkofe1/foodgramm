@@ -16,14 +16,10 @@ admin.site.unregister(Group)
 class BasePresenceFilter(admin.SimpleListFilter):
     """Базовый класс для фильтров по наличию связанных объектов."""
     filter_field: str = ''
-    LABELS = {'true': 'Есть', 'false': 'Нет'}
+    LABELS = {'1': 'Есть', '0': 'Нет'}
 
     def lookups(self, request, model_admin):
-        item_name = self.title.split()[-1]
-        return (
-            ('1', f'{self.LABELS["true"]} {item_name}'),
-            ('0', f'{self.LABELS["false"]} {item_name}')
-        )
+        return self.LABELS.items()
 
     def queryset(self, request, queryset):
         if self.value() == '1':
@@ -41,24 +37,28 @@ class HasRecipesFilter(BasePresenceFilter):
     title = 'Наличие рецептов'
     parameter_name = 'has_recipes'
     filter_field = 'recipes'
+    LABELS = {'1': 'Есть рецепты', '0': 'Нет рецептов'}
 
 
 class HasSubscribersFilter(BasePresenceFilter):
     title = 'Наличие подписчиков'
     parameter_name = 'has_subscribers'
-    filter_field = 'following'
+    filter_field = 'subscribers'
+    LABELS = {'1': 'Есть подписчики', '0': 'Нет подписчиков'}
 
 
 class HasSubscriptionsFilter(BasePresenceFilter):
     title = 'Наличие подписок'
     parameter_name = 'has_subscriptions'
-    filter_field = 'follower'
+    filter_field = 'subscriptions'
+    LABELS = {'1': 'Есть подписки', '0': 'Нет подписок'}
 
 
 class InRecipeFilter(BasePresenceFilter):
     title = 'Использование в рецептах'
     parameter_name = 'in_recipes'
     filter_field = 'recipes'
+    LABELS = {'1': 'Используется', '0': 'Не используется'}
 
 
 class RecipeCountMixin:
@@ -110,15 +110,15 @@ class UserAdmin(RecipeCountMixin, BaseUserAdmin):
                 f'max-width: 150px; object-fit: cover; border-radius: 50%; '
                 f'box-shadow: 0 2px 4px rgba(0,0,0,0.15);"/>'
             )
-        return 'Аватар не установлен'
+        return ''
 
     @admin.display(description='Подписчики')
     def get_subscribers_count(self, user):
-        return user.follower.count()
+        return user.subscribers.count()
 
     @admin.display(description='Подписки')
     def get_subscriptions_count(self, user):
-        return user.following.count()
+        return user.subscriptions.count()
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -138,7 +138,7 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 class RecipeAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'name', 'author', 'get_cooking_time_display',
-        'get_tags', 'get_favorites_count', 'get_image'
+        'get_ingredients', 'get_tags', 'get_favorites_count', 'get_image'
     )
     list_filter = ('tags', 'author')
     search_fields = (
@@ -148,8 +148,16 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = '-'
 
     readonly_fields = ('image_preview',)
+    
+    @admin.display(description='Ингредиенты')
+    def get_ingredients(self, obj):
+        return mark_safe('<br>'.join(
+            f'{item.ingredient.name} ({item.amount} '
+            f'{item.ingredient.measurement_unit})'
+            for item in obj.recipe_ingredients.all()
+        ))
 
-    @admin.display(description='Просмотр картинки')
+    @admin.display(description='Картинка')
     def image_preview(self, recipe):
         if recipe.image:
             return mark_safe(
@@ -158,13 +166,13 @@ class RecipeAdmin(admin.ModelAdmin):
             )
         return None
 
-    @admin.display(description=mark_safe('Время<br>приготовления (мин)'))
+    @admin.display(description=mark_safe('Время<br>(мин)'))
     def get_cooking_time_display(self, obj):
         return obj.cooking_time
 
     @admin.display(description='Теги')
     def get_tags(self, obj):
-        return ', '.join([tag.name for tag in obj.tags.all()])
+        return mark_safe('<br>'.join(tag.name for tag in obj.tags.all()))
 
     @admin.display(description='В избранном')
     def get_favorites_count(self, recipe):
