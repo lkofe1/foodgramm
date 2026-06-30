@@ -4,11 +4,13 @@ from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-
 from django_filters.rest_framework import DjangoFilterBackend
+
 from djoser.views import UserViewSet as DjoserUserViewSet
+
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from recipes.models import (
@@ -146,10 +148,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def get_link(self, request, pk):
         if not Recipe.objects.filter(id=pk).exists():
-            return Response(
-                {'detail': 'Рецепт не найден.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            raise NotFound(f'Рецепт с ID {pk} не найден.')
 
         return Response(
             {'short-link': request.build_absolute_uri(reverse(

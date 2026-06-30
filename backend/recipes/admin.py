@@ -19,7 +19,7 @@ class BasePresenceFilter(admin.SimpleListFilter):
     LABELS = {'1': 'Есть', '0': 'Нет'}
 
     def lookups(self, request, model_admin):
-        return self.LABELS.items()
+        return self.LABELS
 
     def queryset(self, request, queryset):
         if self.value() == '1':
