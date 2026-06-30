@@ -148,7 +148,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def get_link(self, request, pk):
         if not Recipe.objects.filter(id=pk).exists():
-            raise NotFound(f'Рецепт с ID {pk} не найден.')
+            raise NotFound(f'Рецепт {pk} не найден.')
 
         return Response(
             {'short-link': request.build_absolute_uri(reverse(
